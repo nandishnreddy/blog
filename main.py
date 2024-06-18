@@ -3,13 +3,12 @@ from flask_bootstrap import Bootstrap5
 import pymysql
 import pymysql.cursors
 from flask import session
-from flask_login import UserMixin, LoginManager, login_user, logout_user, current_user, login_manager
+from flask_login import UserMixin, LoginManager, login_user, current_user
 from flask_wtf import FlaskForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import StringField, SubmitField, Form, DateField, PasswordField
-from wtforms.validators import DataRequired, URL
-from flask_ckeditor import CKEditor, CKEditorField
-from datetime import date, datetime
+from wtforms.validators import DataRequired
+from flask_ckeditor import CKEditorField
 from flask_ckeditor import CKEditor
 from functools import wraps
 from flask_gravatar import Gravatar
@@ -25,7 +24,7 @@ Bootstrap5(app)
 # MySQL configurations
 app.config['MYSQL_HOST'] = os.environ.get('DB_HOST')
 app.config['MYSQL_USER'] = os.environ.get('DB_USER')
-app.config['MYSQL_PASSWORD'] =os.environ.get('DB_PASSWORD')
+app.config['MYSQL_PASSWORD'] = os.environ.get('DB_PASSWORD')
 app.config['MYSQL_DB'] = os.environ.get('DB_NAME')
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
@@ -41,9 +40,9 @@ app.config['MYSQL_PASSWORD'] = os.environ.get('DB_PASSWORD')
 app.config['MYSQL_DB'] = os.environ.get('DB_NAME')
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager_login = LoginManager()
+login_manager_login.init_app(app)
+login_manager_login.login_view = 'login'
 
 
 class PostForm(Form):
@@ -111,10 +110,10 @@ gravatar = Gravatar(app,
                     base_url=None)
 
 
-@login_manager.user_loader
+@login_manager_login.user_loader
 def load_user(user_id):
     conn = mysql.cursor()
-    conn.execute('SELECT * FROM user WHERE user_id = %s', (user_id))
+    conn.execute('SELECT * FROM user WHERE user_id = %s', user_id)
     result = conn.fetchone()
     conn.close()
     if result:
@@ -203,8 +202,6 @@ def user_delete(id):
 
 @app.route('/')
 def get_all_posts():
-
-
     conn = mysql.cursor()
     conn.execute("SELECT * FROM blog_table ORDER BY date DESC")
     posts = conn.fetchall()
@@ -215,7 +212,6 @@ def get_all_posts():
     return render_template("index.html", all_posts=posts)
 
 
-
 @app.route('/post/<int:post_id>', methods=['GET', 'POST'])
 def show_post(post_id):
     conn = mysql.cursor()
@@ -224,7 +220,6 @@ def show_post(post_id):
     # conn.close()
     if not post:
         abort(404)
-
 
     conn.execute('''
             SELECT comments.text, user.name AS comment_author,user.email AS comment_author_email
@@ -273,7 +268,6 @@ def new_post():
     return render_template("make-post.html", form=form)
 
 
-
 @app.route("/edit_post/<int:post_id>", methods=['GET', 'POST'])
 @admin_only
 def edit_post(post_id):
@@ -319,7 +313,6 @@ def edit_post(post_id):
         return redirect(url_for("show_post", post_id=post_id))
 
     return render_template("make-post.html", form=form, is_edit=True)
-
 
 
 @app.route("/delete/<int:post_id>")
