@@ -13,16 +13,20 @@ from datetime import date, datetime
 from flask_ckeditor import CKEditor
 from functools import wraps
 from flask_gravatar import Gravatar
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret_key'
+app.config['SECRET_KEY'] = os.environ.get('FLASK_KEY')
 Bootstrap5(app)
 
 # MySQL configurations
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = '12ad34cfShiva#'
-app.config['MYSQL_DB'] = 'blog'
+app.config['MYSQL_HOST'] = os.environ.get('DB_HOST')
+app.config['MYSQL_USER'] = os.environ.get('DB_USER')
+app.config['MYSQL_PASSWORD'] =os.environ.get('DB_PASSWORD')
+app.config['MYSQL_DB'] = os.environ.get('DB_NAME')
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = pymysql.connect(host=app.config['MYSQL_HOST'],
@@ -30,6 +34,12 @@ mysql = pymysql.connect(host=app.config['MYSQL_HOST'],
                         password=app.config['MYSQL_PASSWORD'],
                         db=app.config['MYSQL_DB'],
                         cursorclass=pymysql.cursors.DictCursor)
+
+app.config['MYSQL_HOST'] = os.environ.get('DB_HOST')
+app.config['MYSQL_USER'] = os.environ.get('DB_USER')
+app.config['MYSQL_PASSWORD'] = os.environ.get('DB_PASSWORD')
+app.config['MYSQL_DB'] = os.environ.get('DB_NAME')
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -193,7 +203,7 @@ def user_delete(id):
 
 @app.route('/')
 def get_all_posts():
-    # TODO: Query the database for all the posts. Convert the data to a python list.
+
 
     conn = mysql.cursor()
     conn.execute("SELECT * FROM blog_table ORDER BY date DESC")
@@ -205,7 +215,7 @@ def get_all_posts():
     return render_template("index.html", all_posts=posts)
 
 
-# TODO: Add a route so that you can click on individual posts.
+
 @app.route('/post/<int:post_id>', methods=['GET', 'POST'])
 def show_post(post_id):
     conn = mysql.cursor()
@@ -215,7 +225,7 @@ def show_post(post_id):
     if not post:
         abort(404)
 
-    # TODO: Retrieve a BlogPost from the database based on the post_id
+
     conn.execute('''
             SELECT comments.text, user.name AS comment_author,user.email AS comment_author_email
             FROM comments
@@ -263,7 +273,7 @@ def new_post():
     return render_template("make-post.html", form=form)
 
 
-# TODO: edit_post() to change an existing blog post
+
 @app.route("/edit_post/<int:post_id>", methods=['GET', 'POST'])
 @admin_only
 def edit_post(post_id):
@@ -311,7 +321,7 @@ def edit_post(post_id):
     return render_template("make-post.html", form=form, is_edit=True)
 
 
-# TODO: delete_post() to remove a blog post from the database
+
 @app.route("/delete/<int:post_id>")
 @admin_only
 def delete_post(post_id):
@@ -398,4 +408,4 @@ def contact():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5003)
+    app.run(debug=False, port=5003)
